@@ -16,27 +16,63 @@ serve(Command, Param) ->
 			Result
 	end.
 
+
+make_session_id(UserID) ->
+	"session" ++ UserID.
+
+expiration_time() ->
+	Timeout = 20 * 60,
+	calendar:datetime_to_gregorian_seconds(erlang:universaltime())+Timeout.
+expired(Expiration) ->
+	Now = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
+	Now > Expiration.
+
+
 % Create a new session
 create_session(Store, UserID) ->
-	SessionID = "session" ++ UserID,
-	NewSession = {SessionID, UserID, 0},
-	ets:insert(Store, {SessionID, NewSession}),
+	erlang:display(UserID),
+	SessionID = make_session_id(UserID),
+	store_session(Store, SessionID, UserID),
 	{ok, SessionID}.
 
 live_session(Store, SessionID) ->
-	Result = ets:lookup(Store, SessionID),
-	{ok, is_live(Result)}.
-
-is_live([]) ->
-	false;
-is_live([_Session]) ->
-	true.
+	{State, _UserID} = session_state(Store, SessionID),
+	case State of
+		live -> {ok, true};
+		dead -> {ok, false};
+		true -> erlang:display("State not live or dead")
+	end.
 
 renew_session(Store, SessionID) ->
-	{ok, SessionID}.
+	{State, UserID} = session_state(Store, SessionID),
+	case State of
+		live -> store_session(Store, SessionID, UserID);
+		dead -> true
+	end,
+	{ok, UserID}.
 
 kill_session(Store, SessionID) ->
-	{ok, SessionID == SessionID}.
+	Result = live_session(Store, SessionID),
+	ets:delete(Store, SessionID),
+	Result.
+
+
+store_session(Store, SessionID, UserID) ->
+	ets:insert(Store, {SessionID, {SessionID, UserID, expiration_time()}}).
+
+session_state(Store, SessionID) ->
+	case ets:lookup(Store, SessionID) of
+		[] ->
+			{dead, "-"};
+		[{SessionID, {SessionID, UserID, Expiration}}] ->
+			case expired(Expiration) of
+				true -> {dead, "-"};
+				false -> {live, UserID}
+			end;
+		true ->
+			erlang:display("bad session state")
+	end.
+
 
 
 
