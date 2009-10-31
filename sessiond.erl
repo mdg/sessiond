@@ -20,14 +20,14 @@ serve(Command, Param) ->
 create_session(Store, UserID) ->
 	{ok, "session" ++ UserID}.
 
-live_session(SessionID) ->
-	SessionID == SessionID.
+live_session(Store, SessionID) ->
+	{ok, SessionID == SessionID}.
 
-renew_session(SessionID) ->
-	SessionID.
+renew_session(Store, SessionID) ->
+	{ok, SessionID}.
 
-kill_session(SessionID) ->
-	SessionID.
+kill_session(Store, SessionID) ->
+	{ok, SessionID == SessionID}.
 
 
 
@@ -56,14 +56,14 @@ server_loop() ->
 		{Client, Store, {create, UserID}} ->
 			Client ! {self(), create_session(Store, UserID)},
 			server_loop();
-		{Client, {live, SessionID}} ->
-			Client ! {self(), live_session(SessionID)},
+		{Client, Store, {live, SessionID}} ->
+			Client ! {self(), live_session(Store, SessionID)},
 			server_loop();
-		{Client, {renew, SessionID}} ->
-			Client ! {self(), renew_session(SessionID)},
+		{Client, Store, {renew, SessionID}} ->
+			Client ! {self(), renew_session(Store, SessionID)},
 			server_loop();
-		{Client, {'kill', SessionID}} ->
-			Client ! {self(), kill_session(SessionID)},
+		{Client, Store, {'kill', SessionID}} ->
+			Client ! {self(), kill_session(Store, SessionID)},
 			server_loop();
 		{Client, Other} ->
 			Client ! {self(), {error, Other}},
