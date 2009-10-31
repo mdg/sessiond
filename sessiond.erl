@@ -59,14 +59,14 @@ server_loop() ->
 		{Client, {live, SessionID}} ->
 			Client ! {self(), live_session(SessionID)},
 			server_loop();
-		{From, {renew, SessionID}} ->
-			From ! {self(), renew_session(SessionID)},
+		{Client, {renew, SessionID}} ->
+			Client ! {self(), renew_session(SessionID)},
 			server_loop();
-		{From, {'kill', SessionID}} ->
-			From ! {self(), kill_session(SessionID)},
+		{Client, {'kill', SessionID}} ->
+			Client ! {self(), kill_session(SessionID)},
 			server_loop();
-		{From, Other} ->
-			From ! {self(), {error, Other}},
+		{Client, Other} ->
+			Client ! {self(), {error, Other}},
 			server_loop()
 	end.
 
