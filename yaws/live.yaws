@@ -1,6 +1,7 @@
 <erl>
 out(A) ->
-	{Success, Result} = sessiond:serve(live, "sessiondog"),
-	{html, "{\""++ erlang:atom_to_list(Success) ++"\":"++ erlang:atom_to_list(Result) ++"}"}.
+	{ok, SessionID} = yaws_api:getvar(A, sessionid),
+	{Success, Live} = sessiond:serve(live, SessionID),
+	{html, "{\""++ erlang:atom_to_list(Success) ++"\":"++ erlang:atom_to_list(Live) ++"}"}.
 </erl>
 
