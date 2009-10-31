@@ -14,10 +14,6 @@ serve({Server, Store}, Command, Param) ->
 			Result
 	end.
 
-create_session_id(UserID) ->
-	UserID.
-
-
 % Create a new session
 create_session(Store, UserID) ->
 	"session" ++ UserID.
@@ -45,9 +41,6 @@ server_loop() ->
 			server_loop;
 		{From, {'kill', SessionID}} ->
 			From ! {self(), kill_session(SessionID)},
-			server_loop;
-		{From, {set_store, NewStore}} ->
-			Store = NewStore,
 			server_loop;
 		{From, Other} ->
 			From ! {self(), {error, Other}},
