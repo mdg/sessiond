@@ -5,7 +5,8 @@
 % {session, SessionID, UserID, Expiration}
 
 start() ->
-	spawn(fun run_server/0).
+	spawn(fun run_server/0),
+	yaws:start_embedded("yaws").
 
 serve(Command, Param) ->
 	{Server, Store} = find_server(),
@@ -17,7 +18,7 @@ serve(Command, Param) ->
 
 % Create a new session
 create_session(Store, UserID) ->
-	"session" ++ UserID.
+	{ok, "session" ++ UserID}.
 
 live_session(SessionID) ->
 	SessionID == SessionID.
