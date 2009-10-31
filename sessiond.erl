@@ -18,7 +18,10 @@ serve(Command, Param) ->
 
 % Create a new session
 create_session(Store, UserID) ->
-	{ok, "session" ++ UserID}.
+	SessionID = "session" ++ UserID,
+	NewSession = {SessionID, UserID, 0},
+	ets:insert(Store, {SessionID, NewSession}),
+	{ok, SessionID}.
 
 live_session(Store, SessionID) ->
 	Result = ets:lookup(Store, SessionID),
