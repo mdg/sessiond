@@ -54,18 +54,18 @@ server_loop() ->
 	receive
 		{Client, Store, {create, UserID}} ->
 			Client ! {self(), create_session(Store, UserID)},
-			server_loop;
+			server_loop();
 		{Client, {live, SessionID}} ->
 			Client ! {self(), live_session(SessionID)},
-			server_loop;
+			server_loop();
 		{From, {renew, SessionID}} ->
 			From ! {self(), renew_session(SessionID)},
-			server_loop;
+			server_loop();
 		{From, {'kill', SessionID}} ->
 			From ! {self(), kill_session(SessionID)},
-			server_loop;
+			server_loop();
 		{From, Other} ->
 			From ! {self(), {error, Other}},
-			server_loop
+			server_loop()
 	end.
 
