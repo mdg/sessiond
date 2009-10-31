@@ -1,0 +1,6 @@
+<erl>
+out(A) ->
+	{Success, Result} = sessiond:serve(live, "sessiondog"),
+	{html, "{\""++ erlang:atom_to_list(Success) ++"\":"++ erlang:atom_to_list(Result) ++"}"}.
+</erl>
+

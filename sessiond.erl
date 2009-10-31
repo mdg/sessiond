@@ -21,7 +21,13 @@ create_session(Store, UserID) ->
 	{ok, "session" ++ UserID}.
 
 live_session(Store, SessionID) ->
-	{ok, SessionID == SessionID}.
+	Result = ets:lookup(Store, SessionID),
+	{ok, is_live(Result)}.
+
+is_live([]) ->
+	false;
+is_live([_Session]) ->
+	true.
 
 renew_session(Store, SessionID) ->
 	{ok, SessionID}.
