@@ -1,0 +1,21 @@
+
+CREATE
+/create.yaws
+in: userid
+out: {ok|err:"<sessionid>"}
+
+LIVE
+/live.yaws
+in: sessionid
+out: {ok|err:true|false}
+
+RENEW
+/renew.yaws
+in: sessionid
+out: {ok|err:"<userid>"}
+
+KILL
+/kill.yaws
+in: sessionid
+out: {ok|err:true|false}
+
