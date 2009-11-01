@@ -1,0 +1,11 @@
+Integration Tests
+
+Randomized Session IDs
+	They need to be randomized to keep from being spoofed
+
+Packaged Deployment
+
+Configure Port # & Timeout
+
+Allow Timeout Override per Session
+
