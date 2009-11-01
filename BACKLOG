@@ -7,5 +7,7 @@ Packaged Deployment
 
 Configure Port # & Timeout
 
+Mirror session data across pairs of servers
+
 Allow Timeout Override per Session
 
