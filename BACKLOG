@@ -3,6 +3,8 @@ Integration Tests
 Randomized Session IDs
 	They need to be randomized to keep from being spoofed
 
+Ban '-' as a user ID as it's reserved to mean "no session"
+
 Packaged Deployment
 
 Configure Port # & Timeout
