@@ -5,13 +5,14 @@ sessiond is an external store for web sessions
 This example assumes the server is running at localhost, port 8000.
 
 Create a new session for user abc.  Returns a new sessionid.
-    curl http://localhost:8000/create.yaws?userid=abc
+    $ curl http://localhost:8000/create.yaws?userid=abc
+    {"ok":"sessionabc"}
 Check that new session, it will return the original userid.
-    curl http://localhost:8000/renew.yaws?sessionid=sessionabc
+    $ curl http://localhost:8000/renew.yaws?sessionid=sessionabc
 Simulate a log off and kill the session.
-    curl http://localhost:8000/kill.yaws?sessionid=sessionabc
+    $ curl http://localhost:8000/kill.yaws?sessionid=sessionabc
 Check it again, but see that - is returned indicating there is no session with that id.
-    curl http://localhost:8000/renew.yaws?sessionid=sessionabc
+    $ curl http://localhost:8000/renew.yaws?sessionid=sessionabc
 
 # Goals
  * Let web apps share sessions across servers
