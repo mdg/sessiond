@@ -10,7 +10,7 @@ Create a new session for user abc.  Returns a new sessionid.
 Check that new session, it will return the original userid.
     $ curl http://localhost:8000/renew.yaws?sessionid=sessionabc
     {"ok":"abc"}
-Simulate a log off and kill the session.
+Simulate a log off and kill the session.  If there's no log off, don't worry, the session will expire at the timeout you set.
     $ curl http://localhost:8000/kill.yaws?sessionid=sessionabc
     {"ok":true}
 Check it again, but see that - is returned indicating there is no session with that id.
