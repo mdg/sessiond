@@ -9,10 +9,13 @@ Create a new session for user abc.  Returns a new sessionid.
     {"ok":"sessionabc"}
 Check that new session, it will return the original userid.
     $ curl http://localhost:8000/renew.yaws?sessionid=sessionabc
+    {"ok":"abc"}
 Simulate a log off and kill the session.
     $ curl http://localhost:8000/kill.yaws?sessionid=sessionabc
+    {"ok":true}
 Check it again, but see that - is returned indicating there is no session with that id.
     $ curl http://localhost:8000/renew.yaws?sessionid=sessionabc
+    {"ok":"-"}
 
 # Goals
  * Let web apps share sessions across servers
