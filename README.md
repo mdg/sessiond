@@ -1,6 +1,11 @@
 # About
 sessiond is an external store for web sessions
 
+It is built around the premise that web applications are usually good at
+authenticating, but not good at sharing that authentication.  Therefore,
+sessiond attempts to implement Single Sign On by being a shared store of
+session liveness while remaining ignorant of the actual authentication.
+
 # Example
 This example assumes the server is running at localhost, port 8000.
 
