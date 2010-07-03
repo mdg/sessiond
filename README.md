@@ -52,4 +52,5 @@ When a user logs out, remove the session with the `/kill` request.
 
 # Dependencies
  * erlang
+ * yaws
 
