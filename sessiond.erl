@@ -20,19 +20,20 @@ webloop(Req) ->
 	end,
 	Path = Req:get(path),
 	Result = route(Path, Params),
-	Body = io_lib:format("{\"ok\":\"~s\"}", [Result]),
+	Body = mochijson:encode(Result),
 	Req:ok({value, Body}).
 
 route("/create", Params) ->
 	{"userid", UserID} = proplists:lookup("userid", Params),
 	{ok, SessionID} = create_session(UserID),
-	SessionID;
+	{struct, [{"sessionid", SessionID}]};
 route("/renew", Params) ->
 	UserID = "dog",
 	renew_session(UserID);
 route("/live", Params) ->
-	SessionID = "dog",
-	live_session(SessionID);
+	{"sessionid", SessionID} = proplists:lookup("sessionid", Params),
+	{ok, Live} = live_session(SessionID),
+	{struct, [{live, Live}]};
 route("/kill", Params) ->
 	SessionID = "dog",
 	kill_session(SessionID);
