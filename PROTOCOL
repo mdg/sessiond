@@ -1,21 +1,21 @@
 
 CREATE
-/create.yaws
+/create
 in: userid
-out: {ok|err:"<sessionid>"}
+out: {"sessionid":"<sessionid>"}
 
 LIVE
-/live.yaws
+/live
 in: sessionid
-out: {ok|err:true|false}
+out: {"live":(true|false)}
 
 RENEW
-/renew.yaws
+/renew
 in: sessionid
-out: {ok|err:"<userid>"}
+out: {"userid":"<userid>","live":(true|false)}
 
 KILL
-/kill.yaws
+/kill
 in: sessionid
-out: {ok|err:true|false}
+out: {"killed":(true|false)}
 
