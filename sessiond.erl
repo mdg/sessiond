@@ -1,20 +1,44 @@
 -module(sessiond).
--export([start/0, serve/2]).
+-export([start/0, webloop/1]).
 
 
 % {session, SessionID, UserID, Expiration}
 
-start() ->
-	spawn(fun run_server/0),
-	yaws:start_embedded("yaws").
+-define(WEBLOOP, {?MODULE, webloop}).
 
-serve(Command, Param) ->
-	{Server, Store} = find_server(),
-	Server ! {self(), Store, {Command, Param}},
-	receive
-		{Server, Result} ->
-			Result
-	end.
+start() ->
+	open_session_store(),
+	Options = [{name, ?MODULE}, {loop, ?WEBLOOP}, {port, 8443}],
+	mochiweb_http:start(Options).
+
+webloop(Req) ->
+	Method = Req:get(method),
+	Params = case Method of
+		'GET'  -> Req:parse_qs();
+		'POST' -> Req:parse_post();
+		_ -> []
+	end,
+	Path = Req:get(path),
+	Result = route(Path, Params),
+	Body = io_lib:format("{\"ok\":\"~s\"}", [Result]),
+	Req:ok({value, Body}).
+
+route("/create", Params) ->
+	{"userid", UserID} = proplists:lookup("userid", Params),
+	{ok, SessionID} = create_session(UserID),
+	SessionID;
+route("/renew", Params) ->
+	UserID = "dog",
+	renew_session(UserID);
+route("/live", Params) ->
+	SessionID = "dog",
+	live_session(SessionID);
+route("/kill", Params) ->
+	SessionID = "dog",
+	kill_session(SessionID);
+route(Other, Params) ->
+	{404, "404 Resource not found"}.
+
 
 
 make_session_id(UserID) ->
@@ -29,39 +53,39 @@ expired(Expiration) ->
 
 
 % Create a new session
-create_session(Store, UserID) ->
-	erlang:display(UserID),
+create_session(UserID) ->
 	SessionID = make_session_id(UserID),
-	store_session(Store, SessionID, UserID),
+	store_session(SessionID, UserID),
 	{ok, SessionID}.
 
-live_session(Store, SessionID) ->
-	{State, _UserID} = session_state(Store, SessionID),
+live_session(SessionID) ->
+	{State, _UserID} = session_state(SessionID),
 	case State of
 		live -> {ok, true};
 		dead -> {ok, false};
 		true -> erlang:display("State not live or dead")
 	end.
 
-renew_session(Store, SessionID) ->
-	{State, UserID} = session_state(Store, SessionID),
+renew_session(SessionID) ->
+	{State, UserID} = session_state(SessionID),
 	case State of
-		live -> store_session(Store, SessionID, UserID);
+		live -> store_session(SessionID, UserID);
 		dead -> true
 	end,
 	{ok, UserID}.
 
-kill_session(Store, SessionID) ->
-	Result = live_session(Store, SessionID),
-	ets:delete(Store, SessionID),
+kill_session(SessionID) ->
+	Result = live_session(SessionID),
+	ets:delete(session, SessionID),
 	Result.
 
 
-store_session(Store, SessionID, UserID) ->
-	ets:insert(Store, {SessionID, {SessionID, UserID, expiration_time()}}).
+store_session(SessionID, UserID) ->
+	SessionObject = {SessionID, UserID, expiration_time()},
+	ets:insert(session, {SessionID, SessionObject}).
 
-session_state(Store, SessionID) ->
-	case ets:lookup(Store, SessionID) of
+session_state(SessionID) ->
+	case ets:lookup(session, SessionID) of
 		[] ->
 			{dead, "-"};
 		[{SessionID, {SessionID, UserID, Expiration}}] ->
@@ -74,44 +98,12 @@ session_state(Store, SessionID) ->
 	end.
 
 
+% Open the session store table
+% Open it as a named table called "session"
+open_session_store() ->
+	ets:new(session, [public, named_table, set]).
 
-
-run_server() ->
-	publish_server(),
-	server_loop(),
-	close_server().
-
-publish_server() ->
-	SessionStore = ets:new(session, [set]),
-	Server = {self(), SessionStore},
-	ServerStore = ets:new(server, [set, named_table]),
-	ets:insert(ServerStore, {server, Server}).
-
-find_server() ->
-	[{server, Server}] = ets:lookup(server, server),
-	Server.
-
-close_server() ->
-	{_ServerProc, SessionStore} = find_server(),
-	ets:delete(SessionStore),
-	ets:delete(server).
-
-server_loop() ->
-	receive
-		{Client, Store, {create, UserID}} ->
-			Client ! {self(), create_session(Store, UserID)},
-			server_loop();
-		{Client, Store, {live, SessionID}} ->
-			Client ! {self(), live_session(Store, SessionID)},
-			server_loop();
-		{Client, Store, {renew, SessionID}} ->
-			Client ! {self(), renew_session(Store, SessionID)},
-			server_loop();
-		{Client, Store, {'kill', SessionID}} ->
-			Client ! {self(), kill_session(Store, SessionID)},
-			server_loop();
-		{Client, Other} ->
-			Client ! {self(), {error, Other}},
-			server_loop()
-	end.
+% Close the session table
+close_session_store() ->
+	ets:delete(session).
 
