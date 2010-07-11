@@ -28,8 +28,11 @@ route("/create", Params) ->
 	{ok, SessionID} = create_session(UserID),
 	{struct, [{"sessionid", SessionID}]};
 route("/renew", Params) ->
-	UserID = "dog",
-	renew_session(UserID);
+	{"sessionid", SessionID} = proplists:lookup("sessionid", Params),
+	case renew_session(SessionID) of
+		{live, UserID} -> {struct, [{live, true}, {userid, UserID}]};
+		{dead, _} -> {struct, [{live, false}]}
+	end;
 route("/live", Params) ->
 	{"sessionid", SessionID} = proplists:lookup("sessionid", Params),
 	{ok, Live} = live_session(SessionID),
@@ -69,11 +72,12 @@ live_session(SessionID) ->
 
 renew_session(SessionID) ->
 	{State, UserID} = session_state(SessionID),
-	case State of
-		live -> store_session(SessionID, UserID);
-		dead -> true
+	case {State, UserID} of
+		{live, _} -> store_session(SessionID, UserID);
+		{dead, nil} -> nil;
+		{dead, _} -> kill_session(SessionID)
 	end,
-	{ok, UserID}.
+	{State, UserID}.
 
 kill_session(SessionID) ->
 	Result = live_session(SessionID),
@@ -88,10 +92,10 @@ store_session(SessionID, UserID) ->
 session_state(SessionID) ->
 	case ets:lookup(session, SessionID) of
 		[] ->
-			{dead, "-"};
+			{dead, nil};
 		[{SessionID, {SessionID, UserID, Expiration}}] ->
 			case expired(Expiration) of
-				true -> {dead, "-"};
+				true -> {dead, UserID};
 				false -> {live, UserID}
 			end;
 		true ->

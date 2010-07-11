@@ -1,7 +1,0 @@
-<erl>
-out(A) ->
-	{ok, SessionID} = yaws_api:getvar(A, sessionid),
-	{Success, UserID} = sessiond:serve(renew, SessionID),
-	{html, "{\""++ erlang:atom_to_list(Success) ++"\":\""++ UserID ++"\"}"}.
-</erl>
-
