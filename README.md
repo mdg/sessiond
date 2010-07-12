@@ -10,17 +10,17 @@ session liveness while remaining ignorant of the actual authentication.
 This example assumes the server is running at localhost, port 8000.
 
 Create a new session for user abc.  Returns a new sessionid.
-    $ curl http://localhost:8000/create.yaws?userid=abc
-    {"ok":"sessionabc"}
+    $ curl http://localhost:8000/create?userid=abc
+    {"sessionid":"sessionabc"}
 Check that new session, it will return the original userid.
-    $ curl http://localhost:8000/renew.yaws?sessionid=sessionabc
-    {"ok":"abc"}
+    $ curl http://localhost:8000/renew?sessionid=sessionabc
+    {"live":true,"userid":"abc"}
 Simulate a log off and kill the session.  If there's no log off, don't worry, the session will expire at the timeout you set.
-    $ curl http://localhost:8000/kill.yaws?sessionid=sessionabc
-    {"ok":true}
+    $ curl http://localhost:8000/kill?sessionid=sessionabc
+    {"killed":true}
 Check it again, but see that - is returned indicating there is no session with that id.
-    $ curl http://localhost:8000/renew.yaws?sessionid=sessionabc
-    {"ok":"-"}
+    $ curl http://localhost:8000/renew?sessionid=sessionabc
+    {"live":"false"}
 
 # Goals
  * Let web apps share sessions across servers
@@ -52,5 +52,5 @@ When a user logs out, remove the session with the `/kill` request.
 
 # Dependencies
  * erlang
- * yaws
+ * mochiweb
 
