@@ -38,8 +38,8 @@ route("/live", Params) ->
 	{ok, Live} = live_session(SessionID),
 	{struct, [{live, Live}]};
 route("/kill", Params) ->
-	SessionID = "dog",
-	kill_session(SessionID);
+	{"sessionid", SessionID} = proplists:lookup("sessionid", Params),
+	{struct, [{killed, kill_session(SessionID)}]};
 route(Other, Params) ->
 	{404, "404 Resource not found"}.
 
@@ -80,9 +80,9 @@ renew_session(SessionID) ->
 	{State, UserID}.
 
 kill_session(SessionID) ->
-	Result = live_session(SessionID),
+	{ok, Deleted} = live_session(SessionID),
 	ets:delete(session, SessionID),
-	Result.
+	Deleted.
 
 
 store_session(SessionID, UserID) ->

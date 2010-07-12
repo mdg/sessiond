@@ -1,7 +1,0 @@
-<erl>
-out(A) ->
-	{ok, SessionID} = yaws_api:getvar(A, sessionid),
-	{Success, Killed} = sessiond:serve('kill', SessionID),
-	{html, "{\""++ erlang:atom_to_list(Success) ++"\":"++ erlang:atom_to_list(Killed) ++"}"}.
-</erl>
-
