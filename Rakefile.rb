@@ -1,6 +1,6 @@
 
 
-task 'sessiond.beam' => ['sessiond.erl'] do |t|
+file 'sessiond.beam' => ['sessiond.erl'] do |t|
 	sh('erlc sessiond.erl')
 end
 
