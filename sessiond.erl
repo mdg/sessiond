@@ -1,5 +1,8 @@
 -module(sessiond).
 -export([start/0, webloop/1]).
+-export([open_session_store/0, close_session_store/0]).
+-export([route/2]).
+-export([create_session/1, renew_session/1, live_session/1, kill_session/1]).
 
 
 % {session, SessionID, UserID, Expiration}
