@@ -43,7 +43,7 @@ route("/live", Params) ->
 route("/kill", Params) ->
 	{"sessionid", SessionID} = proplists:lookup("sessionid", Params),
 	{struct, [{killed, kill_session(SessionID)}]};
-route(Other, Params) ->
+route(_Other, _Params) ->
 	{404, "404 Resource not found"}.
 
 
