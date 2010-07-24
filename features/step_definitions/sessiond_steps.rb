@@ -5,27 +5,33 @@ World(Test::Unit::Assertions)
 
 
 When /^I create a session for (.*)$/ do |userid|
-	response = RestClient.post('http://localhost:8443/create',
+	actual_response = RestClient.post('http://localhost:8443/create',
 				   :userid => userid)
 	instance_variable_set("@userid", userid)
-	instance_variable_set("@response", response)
+	instance_variable_set("@actual_response", actual_response)
 end
 
-Then /^it should create (.*)$/ do |sessionid|
-	#assert_equal('a', 'hello world')
-	userid = instance_variable_get("@userid")
-	response = instance_variable_get("@response")
-
-	expected = "{\"sessionid\":\"session#{userid}\"}"
-	assert_equal(expected, response)
-end
-
-When /^I renew session (.*)$/ do |sessionid|
+When /^I renew session for (.*)$/ do |userid|
+	sessionid= "session#{userid}"
 	response = RestClient.post("http://localhost:8443/renew",
 				   :sessionid => sessionid)
-	instance_variable_set("@sessionid", sessionid)
-	instance_variable_set("@response", response)
+
+	instance_variable_set("@actual_response", response)
 end
 
-Then /^it should renew (.*)$/ do |sessionid|
+When /^I kill session for (.*)$/ do |userid|
+	sessionid= "session#{userid}"
+	actual_response = RestClient.post("http://localhost:8443/kill",
+				   :sessionid => sessionid)
+
+	instance_variable_set("@userid", userid)
+	instance_variable_set("@sessionid", sessionid)
+	instance_variable_set("@actual_response", actual_response)
+end
+
+
+Then /^response should be (.*)$/ do |expected_response|
+	actual_response = instance_variable_get("@actual_response")
+
+	assert_equal(expected_response, actual_response)
 end
