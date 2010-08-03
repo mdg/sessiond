@@ -1,5 +1,6 @@
 -module(sessiond).
--export([start/0, webloop/1]).
+-include("include/amqp_client.hrl").
+-export([start/0, start_queue/0, start_web/0, webloop/1]).
 -export([open_session_store/0, close_session_store/0]).
 -export([route/2]).
 -export([create_session/1, renew_session/1, live_session/1, kill_session/1]).
@@ -11,6 +12,62 @@
 
 start() ->
 	open_session_store(),
+	start_queue(),
+	start_web().
+
+start_queue() ->
+	Params = #amqp_params{},
+	Conn = amqp_connection:start_network(Params),
+	Channel = amqp_connection:open_channel(Conn),
+
+	QueueName = <<"sessiond">>,
+
+	QueueDeclare = #'queue.declare'{queue = QueueName},
+	#'queue.declare_ok'{queue = Queue
+		, message_count = _MessageCount
+		, consumer_count = _ConsumerCount}
+			= amqp_channel:call(Channel, QueueDeclare),
+	%Queue = amqp_channel:call(Channel, QueueDeclare),
+
+	ExchangeDeclare = #'exchange.declare'{exchange=QueueName},
+	#'exchange.declare_ok'{} = amqp_channel:call(Channel, ExchangeDeclare),
+
+	QueueBind = #'queue.bind'{queue = Queue
+		, exchange = QueueName},
+	#'queue.bind_ok'{} = amqp_channel:call(Channel, QueueBind),
+
+	spawn(fun() -> launch_subscriber(Channel, Queue) end),
+
+	io:format("~p~n", [Queue]).
+
+launch_subscriber(Channel, Queue) ->
+	BasicConsumer = #'basic.consume'{queue = Queue
+		, consumer_tag = <<"">>},
+	#'basic.consume_ok'{consumer_tag = ConsumerTag}
+		= amqp_channel:subscribe(Channel, BasicConsumer, self()),
+	receive
+		#'basic.consume_ok'{consumer_tag = ConsumerTag} -> ok
+	end,
+	queue_loop().
+
+
+queue_loop() ->
+	receive
+		{#'basic.deliver'{consumer_tag = ConsumerTag
+				, delivery_tag = DeliveryTag
+				, redelivered = Redelivered
+				, exchange = Exchange
+				, routing_key = RoutingKey}
+				, Content} ->
+			io:format("Message: ~p", [Content]),
+			queue_loop();
+		Any ->
+			io:format("received unexpected Any: ~p", [Any]),
+			queue_loop()
+	end.
+
+
+start_web() ->
 	Options = [{name, ?MODULE}, {loop, ?WEBLOOP}, {port, 8443}],
 	mochiweb_http:start(Options).
 
