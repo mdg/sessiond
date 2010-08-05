@@ -36,15 +36,15 @@ start_queue() ->
 		, exchange = QueueName},
 	#'queue.bind_ok'{} = amqp_channel:call(Channel, QueueBind),
 
-	spawn(fun() -> launch_subscriber(Channel, Queue) end),
-
-	io:format("~p~n", [Queue]).
-
-launch_subscriber(Channel, Queue) ->
+	Child = spawn(fun queue_loop_stub/0),
 	BasicConsumer = #'basic.consume'{queue = Queue
 		, consumer_tag = <<"">>},
 	#'basic.consume_ok'{consumer_tag = ConsumerTag}
-		= amqp_channel:subscribe(Channel, BasicConsumer, self()),
+		= amqp_channel:subscribe(Channel, BasicConsumer, Child),
+
+	io:format("~p~n", [Queue]).
+
+queue_loop_stub() ->
 	receive
 		#'basic.consume_ok'{consumer_tag = ConsumerTag} -> ok
 	end,
