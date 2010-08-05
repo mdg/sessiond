@@ -53,3 +53,12 @@ Feature: Sessiond
     Examples:
       | UserID    | Response         |
       | dog       | {"live":false}   |
+
+  Scenario Outline: Just Queue Renew
+    When I queue renew session for <UserID>
+    When I check session for <UserID>
+    Then response should be <Response>
+
+    Examples:
+      | UserID    | Response         |
+      | dog       | {"live":false}   |

@@ -1,5 +1,6 @@
 require 'rest-client'
 require 'json'
+require 'amqp'
 require 'test/unit/assertions'
 World(Test::Unit::Assertions)
 
@@ -27,6 +28,20 @@ When /^I kill session for (.*)$/ do |userid|
 	instance_variable_set("@userid", userid)
 	instance_variable_set("@sessionid", sessionid)
 	instance_variable_set("@actual_response", actual_response)
+end
+
+When /^I check session for (.*)$/ do |userid|
+	sessionid= "session#{userid}"
+	response = RestClient.post("http://localhost:8443/live",
+				   :sessionid => sessionid)
+
+	instance_variable_set("@userid", userid)
+	instance_variable_set("@sessionid", sessionid)
+	instance_variable_set("@actual_response", response)
+end
+
+
+When /^I queue renew session for (.*)$/ do |userid|
 end
 
 
