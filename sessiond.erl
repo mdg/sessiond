@@ -10,6 +10,20 @@
 
 -define(WEBLOOP, {?MODULE, webloop}).
 
+-record(session,
+	{ sessionid
+	, userid
+	, timeout = 20 * 60 % 20 minutes * 60 seconds
+	, expiration
+	}).
+
+-record(session_state,
+	{ state = dead
+	, live = false
+	, expiration_delta
+	}).
+
+
 start() ->
 	open_session_store(),
 	start_queue(),
@@ -90,13 +104,18 @@ route("/create", Params) ->
 route("/renew", Params) ->
 	{"sessionid", SessionID} = proplists:lookup("sessionid", Params),
 	case renew_session(SessionID) of
-		{live, UserID} -> {struct, [{live, true}, {userid, UserID}]};
-		{dead, _} -> {struct, [{live, false}]}
+		{#session_state{state=live}, #session{userid=UserID}} ->
+			{struct, [{live, true}, {userid, UserID}]};
+		{#session_state{state=dead}, _} -> {struct, [{live, false}]}
 	end;
 route("/live", Params) ->
 	{"sessionid", SessionID} = proplists:lookup("sessionid", Params),
-	{ok, Live} = live_session(SessionID),
-	{struct, [{live, Live}]};
+	case live_session(SessionID) of
+		{ok, true, Remaining} -> 
+			{struct, [{live, true}, {expiration_delta, Remaining}]};
+		{ok, false, _} ->
+			{struct, [{live, false}]}
+	end;
 route("/kill", Params) ->
 	{"sessionid", SessionID} = proplists:lookup("sessionid", Params),
 	{struct, [{killed, kill_session(SessionID)}]};
@@ -108,59 +127,74 @@ route(_Other, _Params) ->
 make_session_id(UserID) ->
 	"session" ++ UserID.
 
-expiration_time() ->
-	Timeout = 20 * 60,
+expiration_time(default) ->
+	expiration_time(20*60); % 20 minutes * 60 seconds
+expiration_time(Timeout) ->
 	calendar:datetime_to_gregorian_seconds(erlang:universaltime())+Timeout.
-expired(Expiration) ->
-	Now = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
-	Now > Expiration.
 
 
 % Create a new session
 create_session(UserID) ->
 	SessionID = make_session_id(UserID),
-	store_session(SessionID, UserID),
+	Timeout = 20 * 60,
+	Session = #session{sessionid=SessionID, userid=UserID
+		, timeout=Timeout, expiration=expiration_time(Timeout)},
+	store_session(Session),
 	{ok, SessionID}.
 
 live_session(SessionID) ->
-	{State, _UserID} = session_state(SessionID),
-	case State of
-		live -> {ok, true};
-		dead -> {ok, false};
-		true -> erlang:display("State not live or dead")
-	end.
+	{State, _Session} = load_session(SessionID),
+	#session_state{live=Live, expiration_delta=ExpirationDelta} = State,
+	{ok, Live, ExpirationDelta}.
 
 renew_session(SessionID) ->
-	{State, UserID} = session_state(SessionID),
-	case {State, UserID} of
-		{live, _} -> store_session(SessionID, UserID);
+	{State, Session} = load_session(SessionID),
+	#session_state{state=DeadOrAlive} = State,
+	case {DeadOrAlive, Session} of
+		{live, #session{timeout=Timeout}} ->
+			Expiration = expiration_time(Timeout),
+			NewSession = Session#session{expiration=Expiration},
+			store_session(NewSession);
 		{dead, nil} -> nil;
-		{dead, _} -> kill_session(SessionID)
+		{dead, _} -> delete_session(SessionID)
 	end,
-	{State, UserID}.
+	{State, Session}.
 
 kill_session(SessionID) ->
-	{ok, Deleted} = live_session(SessionID),
-	ets:delete(session, SessionID),
+	{ok, Deleted, _ExpirationDelta} = live_session(SessionID),
+	delete_session(SessionID),
 	Deleted.
 
 
-store_session(SessionID, UserID) ->
-	SessionObject = {SessionID, UserID, expiration_time()},
-	ets:insert(session, {SessionID, SessionObject}).
+make_session_state(#session{expiration=Expiration}) ->
+	Now = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
+	ExpirationDelta = Expiration - Now,
+	case ExpirationDelta >= 0 of
+		true -> #session_state{state=live
+				, live=true
+				, expiration_delta=ExpirationDelta};
+		false -> #session_state{state=dead
+				, live=false
+				, expiration_delta=ExpirationDelta}
+	end.
 
-session_state(SessionID) ->
+
+store_session(#session{sessionid=SessionID}=Session) ->
+	ets:insert(session, {SessionID, Session}).
+
+load_session(SessionID) ->
 	case ets:lookup(session, SessionID) of
 		[] ->
-			{dead, nil};
-		[{SessionID, {SessionID, UserID, Expiration}}] ->
-			case expired(Expiration) of
-				true -> {dead, UserID};
-				false -> {live, UserID}
-			end;
-		true ->
+			{#session_state{}, nil};
+		[{SessionID, Session}] ->
+			{make_session_state(Session), Session};
+		_Else ->
 			erlang:display("bad session state")
 	end.
+
+delete_session(SessionID) ->
+	ets:delete(session, SessionID).
+
 
 
 % Open the session store table

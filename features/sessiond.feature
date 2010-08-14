@@ -2,63 +2,74 @@ Feature: Sessiond
   Store and retrieve live sessions
 
   Scenario Outline: Create
-    When I create a session for <UserID>
-    Then response should be <Response>
+    When I create a session for <User>
+    Then sessionid should be <SessionID> in response
 
     Examples:
-      | UserID    | Response                      |
-      | dog       | {"sessionid":"sessiondog"}    |
-      | cat       | {"sessionid":"sessioncat"}    |
+      | User      | SessionID     |
+      | dog       | sessiondog    |
+      | cat       | sessioncat    |
 
   Scenario Outline: Create and Kill
-    When I create a session for <UserID>
-    When I kill session for <UserID>
-    Then response should be <Response>
+    When I create a session for <User>
+    When I kill session for <User>
+    Then killed should be <Killed> in response
 
     Examples:
-      | UserID    | Response           |
-      | dog       | {"killed":true}    |
+      | User      | Killed  |
+      | dog       | true    |
 
   Scenario Outline: Just Kill
-    When I kill session for <UserID>
-    Then response should be <Response>
+    When I kill session for <User>
+    Then killed should be <Killed> in response
 
     Examples:
-      | UserID    | Response           |
-      | horse     | {"killed":false}   |
+      | User      | Killed  |
+      | horse     | false   |
 
   Scenario Outline: Create and Renew
-    When I create a session for <UserID>
-    When I renew session for <UserID>
-    Then response should be <Response>
+    When I create a session for <User>
+    When I renew session for <User>
+    Then live should be <Live> in response
 
     Examples:
-      | UserID    | Response                        |
-      | dog       | {"live":true,"userid":"dog"}    |
+      | User      | Live |
+      | dog       | true |
 
   Scenario Outline: Create, Kill and Renew
-    When I create a session for <UserID>
-    When I kill session for <UserID>
-    When I renew session for <UserID>
-    Then response should be <Response>
+    When I create a session for <User>
+    When I kill session for <User>
+    When I renew session for <User>
+    Then live should be <Live> in response
 
     Examples:
-      | UserID    | Response         |
-      | dog       | {"live":false}   |
+      | User      | Live    |
+      | dog       | false   |
 
   Scenario Outline: Just Renew
-    When I renew session for <UserID>
-    Then response should be <Response>
+    When I renew session for <User>
+    Then live should be <Live> in response
 
     Examples:
-      | UserID    | Response         |
-      | dog       | {"live":false}   |
+      | User      | Live    |
+      | dog       | false   |
+
+  Scenario Outline: Create and Queue Renew
+    When I create a session for <User>
+    When I sleep for <Sleep> seconds
+    When I queue renew session for <User>
+    When I check session for <User>
+    Then live should be <Live> in response
+
+    Examples:
+      | User    | Sleep | Live  |
+      | dog     | 1     | true  |
 
   Scenario Outline: Just Queue Renew
-    When I queue renew session for <UserID>
-    When I check session for <UserID>
-    Then response should be <Response>
+    When I queue renew session for <User>
+    When I check session for <User>
+    Then live should be <Live> in response
 
     Examples:
-      | UserID    | Response         |
-      | dog       | {"live":false}   |
+      | User      | Live    |
+      | mouse     | false   |
