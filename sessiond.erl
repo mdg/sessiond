@@ -3,7 +3,7 @@
 -export([start/0, start_queue/0, start_web/0, webloop/1]).
 -export([open_session_store/0, close_session_store/0]).
 -export([route/2]).
--export([create_session/1, renew_session/1, live_session/1, kill_session/1]).
+-export([create_session/1, renew_session/1, kill_session/1]).
 
 
 % {session, SessionID, UserID, Expiration}
@@ -113,10 +113,14 @@ route("/renew", Params) ->
 	end;
 route("/live", Params) ->
 	{"sessionid", SessionID} = proplists:lookup("sessionid", Params),
-	case live_session(SessionID) of
-		{ok, true, Remaining} -> 
-			{struct, [{live, true}, {relative_exp, Remaining}]};
-		{ok, false, _} ->
+	{#session_state{live=Live}=State, Session} = load_session(SessionID),
+	case Live of
+		true ->
+			#session_state{expiration_delta=Remaining} = State,
+			#session{expiration=Expiration} = Session,
+			{struct, [{live, true}, {relative_exp, Remaining}
+				, {absolute_exp, Expiration}]};
+		false ->
 			{struct, [{live, false}]}
 	end;
 route("/kill", Params) ->
@@ -150,11 +154,6 @@ create_session(UserID) ->
 	store_session(Session),
 	{ok, SessionID}.
 
-live_session(SessionID) ->
-	{State, _Session} = load_session(SessionID),
-	#session_state{live=Live, expiration_delta=ExpirationDelta} = State,
-	{ok, Live, ExpirationDelta}.
-
 renew_session(SessionID) ->
 	{State, Session} = load_session(SessionID),
 	#session_state{state=DeadOrAlive} = State,
@@ -169,9 +168,9 @@ renew_session(SessionID) ->
 	{State, Session}.
 
 kill_session(SessionID) ->
-	{ok, Deleted, _ExpirationDelta} = live_session(SessionID),
+	{#session_state{live=WasLive}=State, Session} = load_session(SessionID),
 	delete_session(SessionID),
-	Deleted.
+	WasLive.
 
 
 make_session_state(#session{expiration=Expiration}) ->

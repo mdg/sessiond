@@ -4,11 +4,12 @@ Feature: Sessiond
   Scenario Outline: Create
     When I create a session for <User>
     Then sessionid should be <SessionID> in response
+    When I check session for <User>
+    Then absolute_exp should be part of the response
 
     Examples:
       | User      | SessionID     |
       | dog       | sessiondog    |
-      | cat       | sessioncat    |
 
   Scenario Outline: Create and Kill
     When I create a session for <User>
