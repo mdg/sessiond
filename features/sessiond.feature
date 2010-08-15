@@ -63,7 +63,7 @@ Feature: Sessiond
 
     Examples:
       | User    | Sleep | Live  |
-      | dog     | 1     | true  |
+      | dogs    | 1     | true  |
 
   Scenario Outline: Just Queue Renew
     When I queue renew session for <User>
