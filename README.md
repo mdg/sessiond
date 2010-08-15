@@ -54,5 +54,7 @@ When a user logs out, remove the session with the `/kill` request.
  * erlang
  * mochiweb
 ## Test Dependencies
- * cucumber
+ * Cucumber
+ * Ruby JSON
+ * Bunny - AMQP Client
 
