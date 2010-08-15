@@ -1,8 +1,9 @@
 require 'rest-client'
 require 'json'
-require 'amqp'
+require 'bunny'
 require 'test/unit/assertions'
 World(Test::Unit::Assertions)
+
 
 
 When /^I create a session for ([a-zA-Z0-9]*)$/ do |userid|
@@ -49,7 +50,13 @@ When /^I check session for (.*)$/ do |userid|
 end
 
 
-When /^I queue renew session for (.*)$/ do |userid|
+When /^I queue renew session for (.*)$/ do |user|
+	msg = "renew session#{user}"
+	b = Bunny.new()
+	b.start()
+	q = b.queue("sessiond")
+	q.publish(msg)
+	b.stop
 end
 
 
