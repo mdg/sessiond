@@ -52,7 +52,7 @@ start_queue() ->
 
 	Child = spawn(fun queue_loop_stub/0),
 	BasicConsumer = #'basic.consume'{queue = Queue
-		, consumer_tag = <<"">>},
+		, consumer_tag = <<"">>, no_ack = true},
 	#'basic.consume_ok'{consumer_tag = ConsumerTag}
 		= amqp_channel:subscribe(Channel, BasicConsumer, Child),
 
@@ -73,7 +73,10 @@ queue_loop() ->
 				, exchange = Exchange
 				, routing_key = RoutingKey}
 				, Content} ->
-			io:format("Message: ~p", [Content]),
+			#amqp_msg{payload=Payload} = Content,
+			spawn(fun() -> route_from_queue(Payload) end),
+			io:format("msg is ||~p||~n", [Payload]),
+			% Tail recurse
 			queue_loop();
 		Any ->
 			io:format("received unexpected Any: ~p", [Any]),
@@ -122,6 +125,11 @@ route("/kill", Params) ->
 route(_Other, _Params) ->
 	{404, "404 Resource not found"}.
 
+
+route_from_queue("renew " ++ SessionID) ->
+	renew_session(SessionID);
+route_from_queue(_BinaryCommand) ->
+	ok.
 
 
 make_session_id(UserID) ->
