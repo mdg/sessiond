@@ -115,7 +115,7 @@ route("/live", Params) ->
 	{"sessionid", SessionID} = proplists:lookup("sessionid", Params),
 	case live_session(SessionID) of
 		{ok, true, Remaining} -> 
-			{struct, [{live, true}, {expiration_delta, Remaining}]};
+			{struct, [{live, true}, {relative_exp, Remaining}]};
 		{ok, false, _} ->
 			{struct, [{live, false}]}
 	end;

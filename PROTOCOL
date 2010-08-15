@@ -1,18 +1,35 @@
 
 CREATE
 /create
-in: userid
-out: {"sessionid":"<sessionid>"}
+in: user=Black Box Text
+    (optional) sessionformat=(hash|attached|test|default=hash)
+               Indicator for how to generate the sessionid
+               hash -> a random hash is generated from inputs
+               attached -> sessionid is included in create request (requires
+                           attached_sessionid parameter be included
+               test -> generate sessionid with predictable format
+    (optional) attached_sessionid=Black Box Text
+               The session id that should be used instead of generating one
+out: {"sessionid":"<sessionid>"
+     ,"absolute_exp":<absolute-expiration>
+     ,"relative_exp":<relative-expiration>
+     }
 
 LIVE
 /live
 in: sessionid
-out: {"live":(true|false)}
+out: {"live":(true|false)
+     ,"user":"<user>"
+     ,"absolute_exp":<absolute-expiration>
+     ,"relative_exp":<relative-expiration>
+     }
 
 RENEW
 /renew
 in: sessionid
-out: {"userid":"<userid>","live":(true|false)}
+out: {"live":(true|false)
+     ,"user":"<user>"
+     }
 
 KILL
 /kill
