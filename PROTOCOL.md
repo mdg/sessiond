@@ -1,5 +1,7 @@
 
-CREATE
+# Web Interface
+
+## CREATE
 /create
 in: user=Black Box Text
     (optional) sessionformat=(hash|attached|test|default=hash)
@@ -15,7 +17,7 @@ out: {"sessionid":"<sessionid>"
      ,"relative_exp":<relative-expiration>
      }
 
-LIVE
+## LIVE
 /live
 in: sessionid
 out: {"live":(true|false)
@@ -24,15 +26,21 @@ out: {"live":(true|false)
      ,"relative_exp":<relative-expiration>
      }
 
-RENEW
+## RENEW
 /renew
 in: sessionid
 out: {"live":(true|false)
      ,"user":"<user>"
      }
 
-KILL
+## KILL
 /kill
 in: sessionid
 out: {"killed":(true|false)}
+
+
+# Queue Interface
+
+## Renew
+msg: renew <sessionid>
 
