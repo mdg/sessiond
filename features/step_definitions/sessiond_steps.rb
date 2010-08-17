@@ -89,6 +89,5 @@ end
 Then /^([a-zA-Z0-9_]*) should be greater than last check$/ do |key|
 	last_resp = instance_variable_get("@last_response")
 	resp = instance_variable_get("@response_object")
-	print "last_resp=<#{last_resp}>, resp=<#{resp}>"
 	assert(resp[key] > last_resp[key])
 end
