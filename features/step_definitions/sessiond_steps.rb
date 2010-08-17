@@ -71,12 +71,6 @@ When /^I sleep for ([0-9]*) seconds$/ do |seconds|
 end
 
 
-Then /^response should be (.*)$/ do |expected_response|
-	actual_response = instance_variable_get("@actual_response")
-
-	assert_equal(expected_response, actual_response)
-end
-
 Then /^([a-zA-Z]*) should be ([a-zA-Z0-9]*) in response$/ do |key,expected_val|
 	response = instance_variable_get("@actual_response")
 
