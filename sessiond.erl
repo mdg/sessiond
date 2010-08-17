@@ -170,7 +170,7 @@ renew_session(SessionID) ->
 	{State, Session}.
 
 kill_session(SessionID) ->
-	{#session_state{live=WasLive}=State, Session} = load_session(SessionID),
+	{#session_state{live=WasLive}, _Session} = load_session(SessionID),
 	delete_session(SessionID),
 	WasLive.
 
