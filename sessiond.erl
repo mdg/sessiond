@@ -134,8 +134,8 @@ route(_Other, _Params) ->
 
 route_from_queue("renew " ++ SessionID) ->
 	renew_session(SessionID);
-route_from_queue(_BinaryCommand) ->
-	ok.
+route_from_queue(_) ->
+	erlang:error("Unknown Queue Command").
 
 
 make_session_id(UserID) ->
