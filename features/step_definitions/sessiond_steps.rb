@@ -52,6 +52,8 @@ When /^I check session for (.*)$/ do |userid|
 	instance_variable_set("@actual_response", response)
 
 	resp = JSON.parse(response)
+	last_response = instance_variable_get("@response_object")
+	instance_variable_set("@last_response", last_response)
 	instance_variable_set("@response_object", resp)
 end
 
@@ -84,3 +86,9 @@ Then /^([a-zA-Z0-9_]*) should be part of the response$/ do |key|
 	assert(resp.key? key)
 end
 
+Then /^([a-zA-Z0-9_]*) should be greater than last check$/ do |key|
+	last_resp = instance_variable_get("@last_response")
+	resp = instance_variable_get("@response_object")
+	print "last_resp=<#{last_resp}>, resp=<#{resp}>"
+	assert(resp[key] > last_resp[key])
+end

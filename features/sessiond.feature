@@ -58,10 +58,12 @@ Feature: Sessiond
 
   Scenario Outline: Create and Queue Renew
     When I create a session for <User>
+    When I check session for <User>
     When I sleep for <Sleep> seconds
     When I queue renew session for <User>
     When I check session for <User>
     Then live should be <Live> in response
+    Then absolute_exp should be greater than last check
 
     Examples:
       | User    | Sleep | Live  |

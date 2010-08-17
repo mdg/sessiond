@@ -74,8 +74,10 @@ queue_loop() ->
 				, routing_key = RoutingKey}
 				, Content} ->
 			#amqp_msg{payload=Payload} = Content,
-			spawn(fun() -> route_from_queue(Payload) end),
+			% Route to the queue processor
 			io:format("msg is ||~p||~n", [Payload]),
+			ListPayload = binary_to_list(Payload),
+			spawn(fun() -> route_from_queue(ListPayload) end),
 			% Tail recurse
 			queue_loop();
 		Any ->
