@@ -6,6 +6,7 @@ Feature: Sessiond
     Then sessionid should be <SessionID> in response
     When I check session for <User>
     Then absolute_exp should be part of the response
+    Then relative_exp should be part of the response
 
     Examples:
       | User      | SessionID     |
