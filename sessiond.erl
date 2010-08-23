@@ -53,25 +53,25 @@ start_queue() ->
 	Child = spawn(fun queue_loop_stub/0),
 	BasicConsumer = #'basic.consume'{queue = Queue
 		, consumer_tag = <<"">>, no_ack = true},
-	#'basic.consume_ok'{consumer_tag = ConsumerTag}
+	#'basic.consume_ok'{consumer_tag = _ConsumerTag}
 		= amqp_channel:subscribe(Channel, BasicConsumer, Child),
 
 	io:format("~p~n", [Queue]).
 
 queue_loop_stub() ->
 	receive
-		#'basic.consume_ok'{consumer_tag = ConsumerTag} -> ok
+		#'basic.consume_ok'{consumer_tag = _ConsumerTag} -> ok
 	end,
 	queue_loop().
 
 
 queue_loop() ->
 	receive
-		{#'basic.deliver'{consumer_tag = ConsumerTag
-				, delivery_tag = DeliveryTag
-				, redelivered = Redelivered
-				, exchange = Exchange
-				, routing_key = RoutingKey}
+		{#'basic.deliver'{consumer_tag = _ConsumerTag
+				, delivery_tag = _DeliveryTag
+				, redelivered = _Redelivered
+				, exchange = _Exchange
+				, routing_key = _RoutingKey}
 				, Content} ->
 			#amqp_msg{payload=Payload} = Content,
 			% Route to the queue processor
